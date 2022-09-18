@@ -3,7 +3,9 @@ config:
   bluetooth:
     enabled: true
     mode: FixedPin
-    fixed_pin: 123456
+    # enabled: null
+    # fixed_pin: null
+    # mode: null
   device:
     ntp_server: 0.pool.ntp.org
     # debug_log_enabled: null
@@ -118,12 +120,7 @@ modules:
     # environment_measurement_enabled: null
     # environment_screen_enabled: null
     # environment_update_interval: null
-node:
-  channels:
-    - name: default
-      psk: default
-    - name: secret
-      psk: VerySecretPassword
+node: {}
   # channels: null
   # owner: null
   # owner_short: null

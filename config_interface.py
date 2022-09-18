@@ -8,6 +8,7 @@ from config_proto import *
 
 CONFIG_FOLDER = "configs"
 CONFIG_ALL    = f"{CONFIG_FOLDER}/all.yaml"
+CONFIG_CREDS  = f"{CONFIG_FOLDER}/creds.yaml"
 
 
 class Interface:
@@ -135,23 +136,42 @@ class Interface:
     def read_config(self):
         CONFIG_NODE   = self.config_node
 
-        config_all  = None
-        config_node = None
+        config_all    = None
+        config_creds  = None
+        config_node   = None
 
-        with open(CONFIG_ALL, "rt") as fhd:
-            config_all = yaml.safe_load(fhd)
-        if self.verbose:
-            print("CONFIG_ALL\n", yaml.safe_dump(config_all))
+
+        if os.path.exists(CONFIG_ALL):
+            with open(CONFIG_ALL, "rt") as fhd:
+                config_all = yaml.safe_load(fhd)
+            if self.verbose:
+                print("CONFIG_ALL\n", yaml.safe_dump(config_all))
+
+
+        if os.path.exists(CONFIG_CREDS):
+            with open(CONFIG_CREDS, "rt") as fhd:
+                config_creds = yaml.safe_load(fhd)
+            if self.verbose:
+                print("CONFIG_CREDS\n", yaml.safe_dump(config_creds))
 
 
         if os.path.exists(CONFIG_NODE):
             with open(CONFIG_NODE, "rt") as fhd:
                 config_node = yaml.safe_load(fhd)
-        if self.verbose:
-            print("CONFIG_NODE\n", yaml.safe_dump(config_node))
+            if self.verbose:
+                print("CONFIG_NODE\n", yaml.safe_dump(config_node))
 
 
-        config_merged = merge_configs(config_all, config_node)
+        configs = [c for c in (config_all, config_creds, config_node) if c is not None]
+        assert len(configs) > 0
+        if   len(configs) == 1:
+            config_merged = configs[0]
+        elif len(configs) == 2:
+            config_merged = merge_configs(configs[0], configs[1])
+        else:
+            config_merged = configs[0]
+            for c in configs[1:]:
+                config_merged = merge_configs(config_merged, c)
         if self.verbose:
             print("CONFIG_MERGED\n", yaml.safe_dump(config_merged))
 
