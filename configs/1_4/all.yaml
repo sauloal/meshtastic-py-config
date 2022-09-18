@@ -1,0 +1,128 @@
+node:
+  channels:
+    - name: default
+      psk: default
+    - name: secret
+      psk: VerySecretPassword
+
+config:
+  device:
+    # role: ROUTER_CLIENT
+    # serial_enabled: true
+    # debug_log_enabled: true
+
+  position:
+    position_broadcast_secs: 15
+    position_broadcast_smart_enabled: true
+    # fixed_position: false
+    gps_enabled: true
+    gps_update_interval: 30
+    gps_attempt_time: 30
+    position_flags:
+    - ALTITUDE
+    - SATINVIEW
+    - SEQ_NO
+    - TIMESTAMP
+    - HEADING
+    - SPEED
+
+  power:
+    # is_power_saving: true
+    # on_battery_shutdown_after_secs: 0
+    # adc_multiplier_override: 2
+    # wait_bluetooth_secs: 0
+    # mesh_sds_timeout_secs: 0
+    # sds_secs: 0
+    ls_secs: 300
+    # min_wake_secs: 0
+
+  network:
+    # wifi_enabled: false
+    # wifi_mode: CLIENT
+    # wifi_ssid: ssid
+    # wifi_psk: psk
+    ntp_server: 0.pool.ntp.org
+
+  display:
+    # screen_on_secs: 0
+    # gps_format: DMS
+    # auto_screen_carousel_secs: 0
+    # compass_north_top: false
+    # flip_screen: false
+    units: METRIC
+
+  lora:
+    use_preset: true
+    modem_preset: LONG_SLOW
+    # bandwidth: 31
+    # spread_factor: 7
+    # coding_rate: 5
+    # frequency_offset: 0
+    region: EU_868
+    # hop_limit: 3
+    # tx_enabled: true
+    # tx_power: 
+    # ignore_incoming: 123456789
+
+  bluetooth:
+    enabled: true
+    mode: FIXED_PIN
+    fixed_pin: 123456
+
+modules:
+  mqtt:
+    enabled: false
+    # address: address
+    # username: username
+    # password: password
+    # encryption_enabled: true
+    # json_enabled: true
+
+  serial: {}
+    # enabled: false
+    # echo: false
+    # rxd: 0
+    # txd: 0
+    # baud: BAUD_115200
+    # timeout: 5
+    # mode: DEFAULT
+
+  external_notification: {}
+    # enabled: false
+    # output_ms: 100
+    # output: 1
+    # active: false
+    # alert_message: false
+    # alert_bell: false
+
+  store_forward: {}
+    # enabled: false
+    # heartbeat: false
+    # records: 1024
+    # history_return_max: 1024
+    # history_return_window: 256
+
+  range_test: {}
+    # enabled: false
+    # sender: 123456789
+    # save: false
+
+  telemetry: {}
+    # device_update_interval: 30
+    # environment_update_interval: 30
+    # environment_measurement_enabled: true
+    # environment_screen_enabled: true
+    # environment_display_fahrenheit: false
+  
+  canned_message: {}
+    # rotary1_enabled: false
+    # inputbroker_pin_a: 0
+    # inputbroker_pin_b: 0
+    # inputbroker_pin_press: 0
+    # inputbroker_event_cw: NONE
+    # inputbroker_event_ccw: NONE
+    # inputbroker_event_press: NONE
+    # updown1_enabled: False
+    # enabled: true
+    # allow_input_source: _any
+    # send_bell: false

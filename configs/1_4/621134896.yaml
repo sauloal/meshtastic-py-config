@@ -1,0 +1,10 @@
+# start of Meshtastic configure yaml
+# channel_url: https://www.meshtastic.org/e/#CgMiAQESAjgD
+
+node:
+  owner: Meshtastic c430
+  owner_short: c430
+
+config:
+  device:
+    role: ROUTER_CLIENT
