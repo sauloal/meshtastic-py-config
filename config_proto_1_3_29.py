@@ -15,39 +15,65 @@ __meshtastic_ver__ = "https://github.com/meshtastic/Meshtastic-python/tree/1.3.2
 
 @dataclass
 class Config(DataClassSerializer):
-    node: "NodeConfig" = empty
-    config: "LocalConfig" = empty
-    modules: "ModuleConfig" = empty
+    node: "NodeConfig" = Empty(None)
+    config: "LocalConfig" = Empty(None)
+    modules: "ModuleConfig" = Empty(None)
 
-    def apply_changes(self, shortName, longName, interface):
-        self.node.apply_changes(shortName, longName, interface)
-        self.config.apply_changes(interface, interface.localConfig)
-        # self.modules.apply_changes(interface, interface.moduleConfig)
+    def apply_changes(self, interface, dry_run=True):
+        node               = interface.node
+
+        has_update_node    = self.node   .apply_changes(interface                   , dry_run=dry_run)
+        has_update_config  = self.config .apply_changes(node     , node.localConfig , dry_run=dry_run)
+        has_update_modules = self.modules.apply_changes(node     , node.moduleConfig, dry_run=dry_run)
         
         # TODO: enable wrinting config
-        # interface.node.writeConfig()
-        pass
+        if has_update_config or has_update_modules:
+            print(" writing config")
+            if dry_run:
+                print("  DRY RUN")
+            else:
+                # interface.node.writeConfig()
+                pass
+
+    def load_device(self, interface):
+        print(" load_device")
+
+        node               = interface.node
+
+        self.node   .load_device(interface)
+        self.config .load_device(node.localConfig)
+        self.modules.load_device(node.moduleConfig)
 
 
 
 @dataclass
 class NodeConfig(DataClassSerializer):
-    owner: str = empty
-    owner_short: str = empty
-    channels: typing.List[typing.Dict[str,str]] = empty
+    owner      : str = Empty(None)
+    owner_short: str = Empty(None)
+    channels   : typing.List[typing.Dict[str,str]] = Empty(None) #TODO: get default channels
 
-    def apply_changes(self, shortName, longName, interface):
+    def apply_changes(self, interface, dry_run=True):
+        shortName          = interface.shortName
+        longName           = interface.longName
         update_owner = False
+        
         if self.owner is not None and isinstance(self.owner, Empty) and self.owner and longName is not None:
             print("  updating owner long")
             update_owner = True
+
         if self.owner_short is not None and isinstance(self.owner_short, Empty) and self.owner_short and shortName is not None:
             print("  updating owner short")
             update_owner = True
+
         if update_owner:
             print(f"updating owner owner_short {self.owner_short} shortName {shortName} owner {self.owner} longName {longName}")
-            # interface.node.setOwner(long_name=longName, short_name=shortName)
+            if dry_run:
+                print("  DRY RUN")
+            else:
+                interface.node.setOwner(long_name=longName, short_name=shortName)
 
+
+        has_any_channel_update = False
         for channel_num, channel_info in enumerate(self.channels):
             channel_name   = channel_info["name"]
             channel_psk    = channel_info["psk"]
@@ -67,8 +93,12 @@ class NodeConfig(DataClassSerializer):
                 channel_data.settings.name = channel_name_v
                 has_channel_update = True
             if has_channel_update:
-                print("  writting channel")
-                # interface.node.writeChannel(channel_num)
+                has_any_channel_update = True
+                if dry_run:
+                    print("  DRY RUN")
+                else:
+                    print("  writting channel")
+                    interface.node.writeChannel(channel_num)
 
                 # setOwner(self, long_name=None, short_name=None, is_licensed=False)
                 # ourNode.channels
@@ -85,6 +115,10 @@ class NodeConfig(DataClassSerializer):
                 # max_channel = 7
                 pass
 
+        return has_any_channel_update or update_owner
+
+    def load_device(self, interface):
+        pass
 
 
 @dataclass
@@ -125,31 +159,32 @@ class LocalConfig(DataClassSerializer):
             *   Mesh packets will prefer to be routed over this node. The Router Client can be used as both a Router and an app connected Client.
             """
 
-        role: Role = empty
+        role: Role = Empty(0)
         """
         * Sets the role of node
         """
 
-        serial_enabled: bool = empty
+        serial_disabled: bool = Empty(False)
         """
         * Disabling this will disable the SerialConsole by not initilizing the StreamAPI
         """
 
-        factory_reset: bool = empty
+        factory_reset: bool = Empty(False)
         """
         * This setting is never saved to disk, but if set, all device settings will be returned to factory defaults.
         """
 
-        debug_log_enabled: bool = empty
+        debug_log_enabled: bool = Empty(False)
         """
         * By default we turn off logging as soon as an API client connects (to keep shared serial link quiet).
         * Set this to true to leave the debug log outputting even when API is active.
         """
 
-        ntp_server: str = empty
+        ntp_server: str = Empty("0.pool.ntp.org")
         """
         * NTP server to use if WiFi is conneced, defaults to `0.pool.ntp.org`
         """
+
 
     @dataclass
     class PositionConfig(DataClassSerializer, AttributeChanger):
@@ -220,37 +255,37 @@ class LocalConfig(DataClassSerializer):
             * walking speeds are likely to be error prone like the compass
             """
 
-        position_broadcast_secs: int = empty
+        position_broadcast_secs: int = Empty(0)
         """
         * We should send our position this often (but only if it has changed significantly)
         * Defaults to 15 minutes
         """
 
-        position_broadcast_smart_disabled: bool = empty
+        position_broadcast_smart_disabled: bool = Empty(False)
         """
         * Adaptive position braoadcast, which is now the default.
         """
 
-        fixed_position: bool = empty
+        fixed_position: bool = Empty(False)
         """
         * If set, this node is at a fixed position.
         * We will generate GPS position updates at the regular interval, but use whatever the last lat/lon/alt we have for the node.
         * The lat/lon/alt can be set by an internal GPS or with the help of the app.
         """
 
-        gps_disabled: bool = empty
+        gps_disabled: bool = Empty(False)
         """
         * Is GPS enabled for this node?
         """
 
-        gps_update_interval: int = empty
+        gps_update_interval: int = Empty(0)
         """
         * How often should we try to get GPS position (in seconds)
         * or zero for the default of once every 30 seconds
         * or a very large value (maxint) to update only once at boot.
         """
 
-        gps_attempt_time: int = empty
+        gps_attempt_time: int = Empty(0)
         """
         * How long should we try to get our position during each gps_update_interval attempt?  (in seconds)
         * Or if zero, use the default of 30 seconds.
@@ -258,7 +293,7 @@ class LocalConfig(DataClassSerializer):
         * window.
         """
     
-        position_flags: PositionFlags = empty
+        position_flags: PositionFlags = Empty(3)
         """
         * Bit field of boolean configuration options for POSITION messages
         * (bitwise OR of PositionFlags)
@@ -291,13 +326,13 @@ class LocalConfig(DataClassSerializer):
             MA1240  = 15
             MA1320  = 16
 
-        charge_current: ChargeCurrent = empty
+        charge_current: ChargeCurrent = Empty(0)
         """
         * Sets the current of the battery charger
         * TBEAM 1.1 Only
         """
         
-        is_power_saving: bool = empty
+        is_power_saving: bool = Empty(False)
         """
         * If set, we are powered from a low-current source (i.e. solar), so even if it looks like we have power flowing in
         * we should try to minimize power consumption as much as possible.
@@ -305,12 +340,12 @@ class LocalConfig(DataClassSerializer):
         * Advanced Option
         """
 
-        on_battery_shutdown_after_secs: int = empty
+        on_battery_shutdown_after_secs: int = Empty(0)
         """
         * If non-zero, the device will fully power off this many seconds after external power is removed.
         """
 
-        adc_multiplier_override: float = empty
+        adc_multiplier_override: float = Empty(0)
         """
         * Ratio of voltage divider for battery pin eg. 3.20 (R1=100k, R2=220k)
         * Overrides the ADC_MULTIPLIER defined in variant for battery voltage calculation.
@@ -318,14 +353,14 @@ class LocalConfig(DataClassSerializer):
         * Fixes issues on Heltec v2
         """
 
-        wait_bluetooth_secs: int = empty
+        wait_bluetooth_secs: int = Empty(0)
         """
         * Wait Bluetooth Seconds
         * The number of seconds for to wait before turning off BLE in No Bluetooth states
         * 0 for default of 1 minute
         """
 
-        mesh_sds_timeout_secs: int = empty
+        mesh_sds_timeout_secs: int = Empty(0)
         """
         * Mesh Super Deep Sleep Timeout Seconds
         * While in Light Sleep if this value is exceeded we will lower into super deep sleep 
@@ -333,7 +368,7 @@ class LocalConfig(DataClassSerializer):
         * 0 for default of two hours, MAXUINT for disabled
         """
     
-        sds_secs: int = empty
+        sds_secs: int = Empty(0)
         """
         * Super Deep Sleep Seconds
         * While in Light Sleep if mesh_sds_timeout_secs is exceeded we will lower into super deep sleep
@@ -341,7 +376,7 @@ class LocalConfig(DataClassSerializer):
         * 0 for default of one year
         """
     
-        ls_secs: int = empty
+        ls_secs: int = Empty(300)
         """
         * Light Sleep Seconds
         * In light sleep the CPU is suspended, LoRa radio is on, BLE is off an GPS is on
@@ -349,7 +384,7 @@ class LocalConfig(DataClassSerializer):
         * 0 for default of 300
         """
     
-        min_wake_secs: int = empty
+        min_wake_secs: int = Empty(0)
         """
         * Minimum Wake Seconds
         * While in light sleep when we receive packets on the LoRa radio we will wake and handle them and stay awake in no BLE mode for this value
@@ -375,24 +410,24 @@ class LocalConfig(DataClassSerializer):
           * If set, the node AP will broadcast as a hidden SSID
           """
 
-        enabled: bool = empty
+        enabled: bool = Empty(False)
         """
         * Enable WiFi (disables Bluetooth)
         """
 
-        mode: WiFiMode = empty
+        mode: WiFiMode = Empty(0)
         """
         * If set, this node will try to join the specified wifi network and
         * acquire an address via DHCP
         """
 
-        ssid: str = empty
+        ssid: str = Empty('')
         """
         * If set, this node will try to join the specified wifi network and
         * acquire an address via DHCP
         """
 
-        psk: str = empty
+        psk: str = Empty('')
         """
         * If set, will be use to authenticate to the named wifi
         """
@@ -441,28 +476,29 @@ class LocalConfig(DataClassSerializer):
             * E is the easting, N is the northing
             """
 
-        screen_on_secs: int = empty
+        screen_on_secs: int = Empty(0)
         """
         * Number of seconds the screen stays on after pressing the user button or receiving a message
         * 0 for default of one minute MAXUINT for always on
         """
 
-        gps_format: GpsCoordinateFormat = empty
+        gps_format: GpsCoordinateFormat = Empty(0)
         """
         * How the GPS coordinates are formatted on the OLED screen.
         """
 
-        auto_screen_carousel_secs: int = empty
+        auto_screen_carousel_secs: int = Empty(0)
         """
         * Automatically toggles to the next page on the screen like a carousel, based the specified interval in seconds.
         * Potentially useful for devices without user buttons.
         """
         
-        compass_north_top: bool = empty
+        compass_north_top: bool = Empty(False)
         """
         * If this is set, the displayed compass will always point north. if unset, the old behaviour 
         * (top of display is heading direction) is used.
         """
+
 
     @dataclass
     class LoRaConfig(DataClassSerializer, AttributeChanger):
@@ -573,13 +609,7 @@ class LocalConfig(DataClassSerializer):
             * Short Range - Fast
             """
 
-        use_preset: bool = empty
-        """
-        * When enabled, the `modem_preset` fields will be adheared to, else the `bandwidth`/`spread_factor`/`coding_rate`
-        * will be taked from their respective manually defined fields
-        """
-
-        modem_preset: ModemPreset = empty
+        modem_preset: ModemPreset = Empty(0)
         """
         * Either modem_config or bandwidth/spreading/coding will be specified - NOT BOTH.
         * As a heuristic: If bandwidth is specified, do not use modem_config.
@@ -588,50 +618,50 @@ class LocalConfig(DataClassSerializer):
         * If you'd like to experiment with other options add them to MeshRadio.cpp in the device code.
         """
 
-        bandwidth: int = empty
+        bandwidth: int = Empty(0)
         """
         * Bandwidth in MHz
         * Certain bandwidth numbers are 'special' and will be converted to the
         * appropriate floating point value: 31 -> 31.25MHz
         """
 
-        spread_factor: int = empty
+        spread_factor: int = Empty(0)
         """
         * A number from 7 to 12.
         * Indicates number of chirps per symbol as 1<<spread_factor.
         """
 
-        coding_rate: int = empty
+        coding_rate: int = Empty(0)
         """
         * The denominator of the coding rate.
         * ie for 4/8, the value is 8. 5/8 the value is 5.
         """
 
-        frequency_offset: float = empty
+        frequency_offset: float = Empty(0.0)
         """
         * This parameter is for advanced users with advanced test equipment, we do not recommend most users use it.
         * A frequency offset that is added to to the calculated band center frequency.
         * Used to correct for crystal calibration errors.
         """
 
-        region: RegionCode = empty
+        region: RegionCode = Empty(0)
         """
         * The region code for the radio (US, CN, EU433, etc...)
         """
 
-        hop_limit: int = empty
+        hop_limit: int = Empty(0)
         """
         * Maximum number of hops. This can't be greater than 7.
         * Default of 3
         """
 
-        tx_disabled: bool = empty
+        tx_disabled: bool = Empty(False)
         """
         * Disable TX from the LoRa radio. Useful for hot-swapping antennas and other tests.
         * Defaults to false
         """
 
-        tx_power: int = empty
+        tx_power: int = Empty(0)
         """
         * If zero then, use default max legal continuous power (ie. something that won't
         * burn out the radio hardware)
@@ -639,7 +669,7 @@ class LocalConfig(DataClassSerializer):
         * Units are in dBm.
         """
 
-        ignore_incoming: int = empty
+        ignore_incoming: int = Empty([])
         """
         * For testing it is useful sometimes to force a node to never listen to
         * particular other nodes (simulating radio out of range). All nodenums listed
@@ -665,38 +695,28 @@ class LocalConfig(DataClassSerializer):
             * Device requires no pin for pairing
             """
 
-        enabled: bool = empty
+        enabled: bool = Empty(True)
         """
         * Enable Bluetooth on the device
         """
 
-        mode: PairingMode = empty
+        mode: PairingMode = Empty(0)
         """
         * Determines the pairing strategy for the device
         """
 
-        fixed_pin: int = empty
+        fixed_pin: int = Empty(12345)
         """
         * Specified pin for PairingMode.FixedPin
         """
 
-    device   : DeviceConfig    = empty
-    position : PositionConfig  = empty
-    power    : PowerConfig     = empty
-    wifi     : WiFiConfig      = empty
-    display  : DisplayConfig   = empty
-    lora     : LoRaConfig      = empty
-    bluetooth: BluetoothConfig = empty
-
-    def apply_changes(self, interface, config):
-        # print("config.ListFields", self, self.__class__, config.__class__, config.ListFields())
-        self.device.apply_changes(interface, config.device)
-        self.position.apply_changes(interface, config.position)
-        self.power.apply_changes(interface, config.power)
-        self.wifi.apply_changes(interface, config.wifi)
-        self.display.apply_changes(interface, config.display)
-        self.lora.apply_changes(interface, config.lora)
-        self.bluetooth.apply_changes(interface, config.bluetooth)
+    device   : DeviceConfig    = Empty(None)
+    position : PositionConfig  = Empty(None)
+    power    : PowerConfig     = Empty(None)
+    wifi     : WiFiConfig      = Empty(None)
+    display  : DisplayConfig   = Empty(None)
+    lora     : LoRaConfig      = Empty(None)
+    bluetooth: BluetoothConfig = Empty(None)
 
 
 
@@ -708,33 +728,33 @@ class ModuleConfig(DataClassSerializer):
 
     @dataclass
     class MQTTConfig(DataClassSerializer, AttributeChanger):
-        enabled: bool = empty
+        enabled: bool = Empty(False)
         """
         * If a meshtastic node is able to reach the internet it will normally attempt to gateway any channels that are marked as
         * is_uplink_enabled or is_downlink_enabled.
         """
 
-        address: str = empty
+        address: str = Empty('')
         """
         * The server to use for our MQTT global message gateway feature.
         * If not set, the default server will be used
         """
 
-        username: str = empty
+        username: str = Empty('')
         """
         * MQTT username to use (most useful for a custom MQTT server).
         * If using a custom server, this will be honoured even if empty.
         * If using the default server, this will only be honoured if set, otherwise the device will use the default username
         """
 
-        password: str = empty
+        password: str = Empty('')
         """
         * MQTT password to use (most useful for a custom MQTT server).
         * If using a custom server, this will be honoured even if empty.
         * If using the default server, this will only be honoured if set, otherwise the device will use the default password
         """
 
-        encryption_enabled: bool = empty
+        encryption_enabled: bool = Empty(False)
         """
         * Whether to send encrypted or decrypted packets to MQTT.
         * This parameter is only honoured if you also set server
@@ -742,7 +762,7 @@ class ModuleConfig(DataClassSerializer):
         * Decrypted packets may be useful for external systems that want to consume meshtastic packets
         """
 
-        json_enabled: bool = empty
+        json_enabled: bool = Empty(False)
         """
         * Whether to send / consume json packets on MQTT
         """
@@ -776,19 +796,19 @@ class ModuleConfig(DataClassSerializer):
         """
         * Preferences for the SerialModule
         """
-        enabled: bool = empty
+        enabled: bool = Empty(False)
 
-        echo: bool = empty
+        echo: bool = Empty(False)
 
-        rxd: int = empty
+        rxd: int = Empty(0)
         
-        txd: int = empty
+        txd: int = Empty(0)
 
-        baud: Serial_Baud = empty
+        baud: Serial_Baud = Empty(0)
 
-        timeout: int = empty
+        timeout: int = Empty(0)
     
-        mode: Serial_Mode = empty
+        mode: Serial_Mode = Empty(0)
 
 
     @dataclass
@@ -796,17 +816,17 @@ class ModuleConfig(DataClassSerializer):
         """
         * Preferences for the ExternalNotificationModule
         """
-        enabled: bool = empty
+        enabled: bool = Empty(False)
 
-        output_ms: int = empty
+        output_ms: int = Empty(0)
 
-        output: int = empty
+        output: int = Empty(0)
 
-        active: bool = empty
+        active: bool = Empty(False)
 
-        alert_message: bool = empty
+        alert_message: bool = Empty(False)
 
-        alert_bell: bool = empty
+        alert_bell: bool = Empty(False)
 
 
     @dataclass
@@ -814,30 +834,30 @@ class ModuleConfig(DataClassSerializer):
         """
         * Enable the Store and Forward Module
         """
-        enabled: bool = empty
+        enabled: bool = Empty(False)
 
-        heartbeat: bool = empty
+        heartbeat: bool = Empty(False)
     
-        records: int = empty
+        records: int = Empty(0)
 
-        history_return_max: int = empty
+        history_return_max: int = Empty(0)
 
-        history_return_window: int = empty
+        history_return_window: int = Empty(0)
 
 
     @dataclass
     class RangeTestConfig(DataClassSerializer, AttributeChanger):
-        enabled: bool = empty
+        enabled: bool = Empty(False)
         """
         * Enable the Range Test Module
         """
 
-        sender: int = empty
+        sender: int = Empty(0)
         """
         * Send out range test messages from this node
         """
 
-        save: bool = empty
+        save: bool = Empty(False)
         """
         * Bool value indicating that this node should save a RangeTest.csv file. 
         * ESP32 Only
@@ -846,30 +866,30 @@ class ModuleConfig(DataClassSerializer):
 
     @dataclass
     class TelemetryConfig(DataClassSerializer, AttributeChanger):
-        device_update_interval: int = empty
+        device_update_interval: int = Empty(0)
         """
         * Interval in seconds of how often we should try to send our
         * device metrics to the mesh
         """
 
-        environment_update_interval: int = empty
+        environment_update_interval: int = Empty(0)
         """
         * Interval in seconds of how often we should try to send our
         * environment measurements to the mesh
         """
 
-        environment_measurement_enabled: bool = empty
+        environment_measurement_enabled: bool = Empty(False)
         """
         * Preferences for the Telemetry Module (Environment)
         * Enable/Disable the telemetry measurement module measurement collection
         """
 
-        environment_screen_enabled: bool = empty
+        environment_screen_enabled: bool = Empty(False)
         """
         * Enable/Disable the telemetry measurement module on-device display
         """
 
-        environment_display_fahrenheit: bool = empty
+        environment_display_fahrenheit: bool = Empty(False)
         """
         * We'll always read the sensor in Celsius, but sometimes we might want to
         * display the results in Fahrenheit as a "user preference".
@@ -888,76 +908,67 @@ class ModuleConfig(DataClassSerializer):
             KEY_BACK   = 27
             KEY_CANCEL = 24
 
-        rotary1_enabled: bool = empty
+        rotary1_enabled: bool = Empty(False)
         """
         * Enable the rotary encoder #1. This is a 'dumb' encoder sending pulses on both A and B pins while rotating.
         """
 
-        inputbroker_pin_a: int = empty
+        inputbroker_pin_a: int = Empty(0)
         """
         * GPIO pin for rotary encoder A port.
         """
     
-        inputbroker_pin_b: int = empty
+        inputbroker_pin_b: int = Empty(0)
         """
         * GPIO pin for rotary encoder B port.
         """
     
-        inputbroker_pin_press: int = empty
+        inputbroker_pin_press: int = Empty(0)
         """
         * GPIO pin for rotary encoder Press port.
         """
     
-        inputbroker_event_cw: InputEventChar = empty
+        inputbroker_event_cw: InputEventChar = Empty(0)
         """
         * Generate input event on CW of this kind.
         """
     
-        inputbroker_event_ccw: InputEventChar = empty
+        inputbroker_event_ccw: InputEventChar = Empty(0)
         """
         * Generate input event on CCW of this kind.
         """
     
-        inputbroker_event_press: InputEventChar = empty
+        inputbroker_event_press: InputEventChar = Empty(0)
         """
         * Generate input event on Press of this kind.
         """
     
-        updown1_enabled: bool = empty
+        updown1_enabled: bool = Empty(False)
         """
         * Enable the Up/Down/Select input device. Can be RAK rotary encoder or 3 buttons. Uses the a/b/press definitions from inputbroker.
         """
         
-        enabled: bool = empty
+        enabled: bool = Empty(False)
         """
         * Enable/disable CannedMessageModule.
         """
     
-        allow_input_source: str = empty
+        allow_input_source: str = Empty('')
         """
         * Input event origin accepted by the canned message module.
         * Can be e.g. "rotEnc1", "upDownEnc1" or keyword "_any"
         """
     
-        send_bell: bool = empty
+        send_bell: bool = Empty(False)
         """
         * CannedMessageModule also sends a bell character with the messages.
         * ExternalNotificationModule can benefit from this feature.
         """
 
-    mqtt                 : MQTTConfig                 = empty
-    serial               : SerialConfig               = empty
-    external_notification: ExternalNotificationConfig = empty
-    store_forward        : StoreForwardConfig         = empty
-    range_test           :  RangeTestConfig           = empty
-    telemetry            : TelemetryConfig            = empty
-    canned_message       : CannedMessageConfig        = empty
-
-    def apply_changes(self, interface, config):
-        self.mqtt.apply_changes(interface, config)
-        self.serial.apply_changes(interface, config)
-        self.external_notification.apply_changes(interface, config)
-        self.store_forward.apply_changes(interface, config)
-        self.range_test.apply_changes(interface, config)
-        self.telemetry.apply_changes(interface, config)
-        self.canned_message.apply_changes(interface, config)
+    mqtt                 : MQTTConfig                 = Empty(None)
+    serial               : SerialConfig               = Empty(None)
+    external_notification: ExternalNotificationConfig = Empty(None)
+    store_forward        : StoreForwardConfig         = Empty(None)
+    range_test           : RangeTestConfig            = Empty(None)
+    telemetry            : TelemetryConfig            = Empty(None)
+    canned_message       : CannedMessageConfig        = Empty(None)

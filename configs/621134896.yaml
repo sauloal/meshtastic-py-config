@@ -13,7 +13,7 @@ config:
     # factory_reset: null
     # ntp_server: null
     # role: null
-    # serial_enabled: null
+    # serial_disabled: null
   display: {}
     # auto_screen_carousel_secs: null
     # compass_north_top: null
@@ -30,7 +30,6 @@ config:
     # spread_factor: null
     # tx_disabled: null
     # tx_power: null
-    # use_preset: null
   position: {}
     # fixed_position: null
     # gps_attempt_time: null

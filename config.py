@@ -12,15 +12,15 @@ def get_config():
     meshtastic_version = pkg_resources.get_distribution("meshtastic").version
     print("#", meshtastic_version)
 
-    d = yaml.safe_dump(json.loads(json.dumps(Config.get_empty().as_template())))
+    d = yaml.safe_dump(json.loads(json.dumps(Config.get_empty().to_template())))
     print(d)
 
 def apply_changes():
     interface = Interface(verbose=verbose)
 
-    print(interface)
+    print("interface", interface)
 
-    print(interface.config)
+    # print("interface.config", interface.config)
 
     # interface.apply_changes()
 

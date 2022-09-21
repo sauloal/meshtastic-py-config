@@ -12,14 +12,13 @@ config:
     # factory_reset: null
     # ntp_server: null
     # role: null
-    # serial_enabled: null
+    # serial_disabled: null
   display: {}
     # auto_screen_carousel_secs: null
     # compass_north_top: null
     # gps_format: null
     # screen_on_secs: null
   lora:
-    use_preset: true
     modem_preset: VLongSlow
     region: EU868
     # bandwidth: null

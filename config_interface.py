@@ -1,3 +1,4 @@
+from copy import deepcopy
 import os
 import yaml
 
@@ -175,10 +176,28 @@ class Interface:
         if self.verbose:
             print("CONFIG_MERGED\n", yaml.safe_dump(config_merged))
 
+        self._config        = Config.from_dict_and_device(deepcopy(config_merged), self)
+        self._config_local  = Config.from_dict(deepcopy(config_merged))
+        self._config_device = Config.from_device(self)
 
-        self._config = Config.from_dict(config_merged)
+        print()
+        # print("self._config       ", self._config     .to_template())
+        print("self._config       ", self._config     .to_json())
+        print("self._config       ", self._config     .to_dict())
+
+        print()
+        # print("self._config_local ", self._config_local.to_template())
+        print("self._config_local ", self._config_local.to_json())
+        print("self._config_local ", self._config_local.to_dict())
+
+        print()
+        # print("self._config_device", self._config_device.to_template())
+        print("self._config_device", self._config_device.to_json())
+        print("self._config_device", self._config_device.to_dict())
+
+        print()
         if self.verbose:
-            print(self._config)
+            print("self._config", self._config)
 
     def __str__(self):
         return json.dumps({
@@ -193,7 +212,7 @@ class Interface:
         }, indent=1, sort_keys=True)
 
     def apply_changes(self):
-        self.config.apply_changes(self.shortName, self.longName, self.node)
+        self.config.apply_changes(self)
 
 
 
