@@ -1,0 +1,7 @@
+*.zip
+*.swp
+
+configs/*.yaml
+
+__pycache__
+venv
