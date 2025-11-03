@@ -7,6 +7,9 @@ help:
 	@echo
 	@echo install
 	@echo meshtastic
+	@echo meshtastic-config
+	@echo meshtastic-info
+	@echo meshtastic-metadata
 	@echo
 
 

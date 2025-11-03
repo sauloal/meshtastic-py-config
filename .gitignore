@@ -1,7 +1,8 @@
 *.zip
 *.swp
 
-configs/*.yaml
+configs/
+secrets/
 
 __pycache__
 venv

@@ -7,6 +7,8 @@ from pathlib import Path
 
 import subprocess
 
+CONFIG_DIR="configs/"
+
 INFO  = 8
 DEBUG = 9
 
@@ -133,36 +135,65 @@ def get_info(verbosity: int = 0):
 	}
 
 	node_id     = info["my_info"]["myNodeId"]
-	outfile     = Path(f"configs/{node_id}.yaml")
+
+	return node_id, info
+
+def save_info(info, outfile: str|Path):
+	outfile = Path(outfile)
 
 	if outfile.exists():
 		outfile.unlink()
 
-	print(f"Exporting info to {outfile}")
+	print(f"Exporting info   to {outfile}")
 
 	with open(outfile, "wt") as fhd:
 		yaml.safe_dump(info, fhd)
 
 	assert outfile.exists()
 
-	return node_id, info
 
-def save_config(out_file: str|Path):
-	out_file = Path(out_file)
+def save_config(outfile: str|Path):
+	outfile = Path(outfile)
 
-	info     = subprocess.Popen(f"meshtastic --export-config {out_file}", shell=True, stdout=subprocess.PIPE).stdout.read().decode()
+	if outfile.exists():
+		outfile.unlink()
 
-	print(info)
+	print(f"Exporting config to {outfile}")
 
-	assert out_file.exists(), f"config file was not created: {out_file}"
+	res     = subprocess.Popen(f"meshtastic --export-config {outfile}", shell=True, stdout=subprocess.PIPE).stdout.read().decode()
+
+	print(res)
+
+	assert outfile.exists(), f"config file was not created: {outfile}"
+
+def set_config(outfile: str|Path):
+	outfile = Path(outfile)
+
+	if outfile.exists():
+		outfile.unlink()
+
+	print(f"Setting config from {outfile}")
+
+	res     = subprocess.Popen(f"meshtastic --configure {outfile}", shell=True, stdout=subprocess.PIPE).stdout.read().decode()
+
+	print(res)
+
+	outfile.unlink()
 
 def main():
+	config_dir = Path(CONFIG_DIR)
+
+	if not config_dir.exists():
+		config_dir.mkdir()
+
 	node_id, info = get_info()
 
 	#print("INFO", json.dumps(info, indent=1, sort_keys=True))
 
-	outfile_cfg = Path(f"configs/{node_id}.cfg.yaml")
+	outfile     = Path(f"{config_dir}/{node_id}.yaml")
+	outfile_cfg = Path(f"{config_dir}/{node_id}.cfg.yaml")
 
+	save_info(  info, outfile)
 	save_config(outfile_cfg)
 
 if __name__ == "__main__":
