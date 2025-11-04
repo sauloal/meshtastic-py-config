@@ -169,16 +169,13 @@ def save_config(outfile: str|Path):
 def set_config(outfile: str|Path):
 	outfile = Path(outfile)
 
-	if outfile.exists():
-		outfile.unlink()
+	assert outfile.exists()
 
 	print(f"Setting config from {outfile}")
 
 	res     = subprocess.Popen(f"meshtastic --configure {outfile}", shell=True, stdout=subprocess.PIPE).stdout.read().decode()
 
 	print(res)
-
-	outfile.unlink()
 
 def main():
 	config_dir = Path(CONFIG_DIR)

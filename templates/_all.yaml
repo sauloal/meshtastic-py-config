@@ -3,8 +3,8 @@
 config:
   bluetooth:
     enabled: true
-    #fixedPin: 00000
     mode: FIXED_PIN
+    #fixedPin: 00000
   device:
     buzzerGpio: 25
     disableTripleClick: true
@@ -48,11 +48,11 @@ config:
     #publicKey: base64:yyyyyyyyyyyyyyyyyyyy
     serialEnabled: true
 module_config:
-  ambientLighting:
-    blue: 111
-    current: 10
-    green: 98
-    red: 113
+  #ambientLighting:
+   # blue: 111
+   # current: 10
+   # green: 98
+   # red: 113
   detectionSensor:
     detectionTriggerType: LOGIC_HIGH
     minimumBroadcastSecs: 1800
@@ -66,12 +66,12 @@ module_config:
     nagTimeout: 60
     outputBuzzer: 25
   mqtt:
-    #address: xx.xx.xx.xx
     encryptionEnabled: true
     mapReportSettings:
       positionPrecision: 32
       publishIntervalSecs: 60
     mapReportingEnabled: true
+    #address: xx.xx.xx.xx
     #password: xxxxxx
     #root: yyyy/zzzz
     #username: mosquitto

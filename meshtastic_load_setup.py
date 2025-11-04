@@ -11,8 +11,17 @@ import subprocess
 
 import meshtastic_save_setup
 
-TEMPLATE_DIR="templates/"
-SECRET_DIR="secrets/"
+CONFIG_DIR   = meshtastic_save_setup.CONFIG_DIR
+TEMPLATE_DIR = "templates/"
+SECRET_DIR   = "secrets/"
+
+EXCLUDE_KEYS = {
+	"channel_url": None,
+	"location": None,
+	"module_config": {
+		"ambientLighting": None
+	}
+}
 
 def merge_dict(d1, d2):
 	if isinstance(d2, dict):
@@ -34,7 +43,17 @@ def merge_dict(d1, d2):
 
 	return d1
 
-def _get_config(node_id: str, folder: str|Path):
+def _exclude_keys(d1, d2):
+	for k2, v2 in d2.items():
+		if v2 is None:
+			if k2 in d1:
+				del d1[k2]
+		else:
+			if k2 in d1:
+				d1[k2] = _exclude_keys(d1[k2], d2[k2])
+	return d1
+
+def _get_config(node_id: str, folder: str|Path, exclude_keys: dict|None=None):
 	assert folder.exists()
 	assert folder.is_dir()
 
@@ -44,6 +63,9 @@ def _get_config(node_id: str, folder: str|Path):
 			with file.open("rt") as fhd:
 				cfg  = yaml.safe_load(fhd)
 				data = cfg if data is None else merge_dict(data, cfg)
+	if exclude_keys:
+		data = _exclude_keys(data, exclude_keys)
+
 	return data
 
 def _debug_merge(data, name):
@@ -73,9 +95,9 @@ def calc_dict_diff(d1, d2, depth=0):
 				if v1 != v2:
 					print(f"{' '*depth}{k}: {v1} <=> {v2}")
 
-def get_config(node_id: str, template_dir: str|Path = meshtastic_save_setup.CONFIG_DIR, debug: bool=False):
-	config_dir   = Path(template_dir)
-	data         = _get_config(node_id, config_dir)
+def get_config(node_id: str, config_dir: str|Path = CONFIG_DIR, debug: bool=False, exclude_keys: dict|None=None):
+	config_dir   = Path(config_dir)
+	data         = _get_config(node_id, config_dir, exclude_keys=exclude_keys)
 	if debug:
 		data = debug_merge(data, "config")
 	return data
@@ -105,21 +127,27 @@ def main():
 	#print("INFO")
 	#yaml.safe_dump(info, sys.stdout)
 
-	config_dir    = Path(meshtastic_save_setup.CONFIG_DIR)
+	config_dir    = Path(CONFIG_DIR)
 	assert config_dir.exists()
 	assert config_dir.is_dir()
 	outfile_cfg   = Path(f"{config_dir}/{node_id}.cfg.yaml")
 	meshtastic_save_setup.save_config(outfile_cfg)
 
+	print("="*50)
 	print("CONFIG")
-	config = get_config(   node_id, config_dir,   debug=debug)
+	print("="*50)
+	config = get_config(   node_id, config_dir,   debug=debug, exclude_keys=EXCLUDE_KEYS)
 	yaml.safe_dump(config  , sys.stdout)
 
+	print("="*50)
 	print("TEMPLATE")
+	print("="*50)
 	template       = get_templates(node_id, template_dir, debug=debug)
 	yaml.safe_dump(template, sys.stdout)
 
+	print("="*50)
 	print("SECRET")
+	print("="*50)
 	secret         = get_secrets(  node_id, secret_dir,   debug=debug)
 	yaml.safe_dump(secret  , sys.stdout)
 
@@ -132,7 +160,9 @@ def main():
 
 	data          = merge_dict(data, secret)
 
+	print("="*50)
 	print("DATA")
+	print("="*50)
 	yaml.safe_dump(data, sys.stdout)
 
 	fi       = io.StringIO()
@@ -146,13 +176,21 @@ def main():
 		print(f"CONFIG ALREADY UP-TO-DATE")
 		return
 
+	print("="*50)
 	print(f"CONFIG DIFFER")
+	print("="*50)
 	calc_dict_diff(config, data)
+	print("="*50)
 
 	outfile_cfg   = Path(f"{config_dir}/{node_id}.upd.yaml")
-	meshtastic_save_setup.save_config(outfile_cfg)
+	#meshtastic_save_setup.save_config(outfile_cfg)
+	with outfile_cfg.open("wt") as fhd:
+		fhd.write(data_y)
 
 	#meshtastic_save_setup.set_config(outfile_cfg)
+
+	print(f"deleting {outfile_cfg}")
+	outfile_cfg.unlink()
 
 if __name__ == "__main__":
 	main()
