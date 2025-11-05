@@ -18,22 +18,8 @@ make install
 
 ## Firmware
 
-<https://flasher.meshtastic.org/>
+<https://github.com/mikecarper/meshfirmware>
 
-- Select board
-- Select version
-- Select Upload
-- Get Link
-
-<https://raw.githubusercontent.com/meshtastic/meshtastic.github.io/master/firmware-2.6.11.60ec05e/firmware-tracker-t1000-e-2.6.11.60ec05e.uf2>
-
-Enter DFU
-
-	meshtastic --enter-dfu
-
-Run UF2Utils
-
-<https://wiki.makerdiary.com/nrf52840-mdk-usb-dongle/programming/uf2boot/#installing-uf2-converter>
-
-<https://www.nordicsemi.com/Products/Development-tools/nrf-util>
-
+```
+cd ~ && git clone https://github.com/mikecarper/meshfirmware.git && cd meshfirmware && chmod +x mtfirmware.sh && ./mtfirmware.sh
+```

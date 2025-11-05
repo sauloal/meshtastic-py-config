@@ -183,7 +183,6 @@ def main():
 	print("="*50)
 
 	outfile_cfg   = Path(f"{config_dir}/{node_id}.upd.yaml")
-	#meshtastic_save_setup.save_config(outfile_cfg)
 	with outfile_cfg.open("wt") as fhd:
 		fhd.write(data_y)
 

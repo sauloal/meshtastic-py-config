@@ -62,9 +62,11 @@ module_config:
     alertBellVibra: true
     alertMessage: true
     alertMessageVibra: true
+    alertMessageBuzzer: true
     enabled: true
     nagTimeout: 60
     outputBuzzer: 25
+    usePwm: True
   mqtt:
     encryptionEnabled: true
     mapReportSettings:
