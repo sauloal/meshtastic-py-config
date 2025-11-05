@@ -1,1 +1,3 @@
 meshtastic
+#esptool
+adafruit-nrfutil
