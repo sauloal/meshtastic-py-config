@@ -9,11 +9,12 @@ from pathlib import Path
 
 import subprocess
 
-import meshtastic_save_setup
+import meshtastic_download_setup
 
-DRY_RUN      = True
+DRY_RUN      = False
+DEBUG        = False
 
-CONFIG_DIR   = meshtastic_save_setup.CONFIG_DIR
+CONFIG_DIR   = meshtastic_download_setup.CONFIG_DIR
 TEMPLATE_DIR = "templates/"
 SECRET_DIR   = "secrets/"
 
@@ -119,12 +120,13 @@ def get_secrets(node_id: str,secret_dir: str|Path = SECRET_DIR, debug: bool=Fals
 	return data
 
 def main():
-	debug         = False
+	dry_run       = DRY_RUN
+	debug         = DEBUG
 
 	template_dir  = Path(TEMPLATE_DIR)
 	secret_dir    = Path(SECRET_DIR)
 
-	node_id, info = meshtastic_save_setup.get_info()
+	node_id, info = meshtastic_download_setup.get_info()
 
 	#print("INFO")
 	#yaml.safe_dump(info, sys.stdout)
@@ -133,7 +135,7 @@ def main():
 	assert config_dir.exists()
 	assert config_dir.is_dir()
 	outfile_cfg   = Path(f"{config_dir}/{node_id}.cfg.yaml")
-	meshtastic_save_setup.save_config(outfile_cfg)
+	meshtastic_download_setup.save_config(outfile_cfg)
 
 	print("="*50)
 	print("CONFIG")
@@ -188,11 +190,11 @@ def main():
 	with outfile_cfg.open("wt") as fhd:
 		fhd.write(data_y)
 
-	if DRY_RUN:
+	if dry_run:
 		print(" dry run")
 	else:
 		print(" uploading")
-		meshtastic_save_setup.set_config(outfile_cfg)
+		meshtastic_download_setup.set_config(outfile_cfg)
 
 	print(f"deleting {outfile_cfg}")
 	outfile_cfg.unlink()
