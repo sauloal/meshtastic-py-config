@@ -11,7 +11,7 @@ import subprocess
 
 import meshtastic_download_setup
 
-DRY_RUN      = False
+DRY_RUN      = True
 DEBUG        = False
 
 CONFIG_DIR   = meshtastic_download_setup.CONFIG_DIR
@@ -122,6 +122,14 @@ def get_secrets(node_id: str,secret_dir: str|Path = SECRET_DIR, debug: bool=Fals
 def main():
 	dry_run       = DRY_RUN
 	debug         = DEBUG
+
+	try:
+		dry_run       = sys.argv[1].lower() not in "1,y,yes,t,true".split(",")
+	except IndexError:
+		pass
+
+	if dry_run:
+		print("DRY RUN")
 
 	template_dir  = Path(TEMPLATE_DIR)
 	secret_dir    = Path(SECRET_DIR)

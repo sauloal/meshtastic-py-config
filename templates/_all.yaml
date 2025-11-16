@@ -8,8 +8,9 @@ config:
   device:
     buzzerGpio: 25
     #disableTripleClick: true
-    disableTripleClick: false
-    nodeInfoBroadcastSecs: 3600
+    #disableTripleClick: false
+    #nodeInfoBroadcastSecs: 3600
+    nodeInfoBroadcastSecs: 10800
     role: TRACKER
     serialEnabled: true
     tzdef: Europe/Amsterdam
@@ -73,14 +74,15 @@ module_config:
     encryptionEnabled: true
     mapReportSettings:
       positionPrecision: 32
-      publishIntervalSecs: 60
+      publishIntervalSecs: 3600
     mapReportingEnabled: true
     #address: xx.xx.xx.xx
     #password: xxxxxx
     #root: yyyy/zzzz
     #username: mosquitto
   neighborInfo:
-    updateInterval: 1800
+    #updateInterval: 1800
+    updateInterval: 14400
   rangeTest:
     sender: 45
   storeForward:
