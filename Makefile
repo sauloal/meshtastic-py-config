@@ -12,8 +12,8 @@ help:
 	@echo meshtastic-info
 	@echo meshtastic-metadata
 	@echo
-	@echo config-save
-	@echo config-load
+	@echo config-download
+	@echo config-upload
 	@echo
 	@echo flash-bootloader-download
 	@echo flash-bootloader-upload
@@ -48,13 +48,13 @@ meshtastic-metadata:
 
 
 
-.PHONY: config-save config-load
+.PHONY: config-download config-upload
 
-config-save:
-	. venv/bin/activate && ./meshtastic_save_setup.py
+config-download:
+	. venv/bin/activate && ./meshtastic_download_setup.py
 
-config-load:
-	. venv/bin/activate && ./meshtastic_load_setup.py
+config-upload:
+	. venv/bin/activate && ./meshtastic_upload_setup.py
 
 
 

@@ -7,7 +7,8 @@ config:
     #fixedPin: 00000
   device:
     buzzerGpio: 25
-    disableTripleClick: true
+    #disableTripleClick: true
+    disableTripleClick: false
     nodeInfoBroadcastSecs: 3600
     role: TRACKER
     serialEnabled: true
@@ -30,14 +31,15 @@ config:
     #wifiPsk: xxxxx
     #wifiSsid: yyyyyyyyyy
   position:
-    broadcastSmartMinimumDistance: 100
+    broadcastSmartMinimumDistance: 5
     broadcastSmartMinimumIntervalSecs: 30
     gpsEnGpio: 43
     gpsMode: ENABLED
-    gpsUpdateInterval: 150
+    gpsUpdateInterval: 1
     positionBroadcastSecs: 300
     positionBroadcastSmartEnabled: true
-    positionFlags: 811
+    #positionFlags: 811
+    positionFlags: 939
   power:
     lsSecs: 300
     minWakeSecs: 10
@@ -81,11 +83,16 @@ module_config:
     updateInterval: 1800
   rangeTest:
     sender: 45
+  storeForward:
+    enabled: true
+    heartbeat: true
   telemetry:
     deviceUpdateInterval: 300
+    environmentMeasurementEnabled: true
     environmentUpdateInterval: 300
     powerMeasurementEnabled: true
     powerUpdateInterval: 300
+
 #owner: xxxxx
 #owner_short: xxxx
 ringtone: 24:d=32,o=5,b=565:f6,p,f6,4p,p,f6,p,f6,2p,p,b6,p,b6,p,b6,p,b6,p,b,p,b,p,b,p,b,p,b,p,b,p,b,p,b,1p.,2p.,p

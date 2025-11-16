@@ -11,6 +11,8 @@ import subprocess
 
 import meshtastic_save_setup
 
+DRY_RUN      = True
+
 CONFIG_DIR   = meshtastic_save_setup.CONFIG_DIR
 TEMPLATE_DIR = "templates/"
 SECRET_DIR   = "secrets/"
@@ -186,7 +188,11 @@ def main():
 	with outfile_cfg.open("wt") as fhd:
 		fhd.write(data_y)
 
-	#meshtastic_save_setup.set_config(outfile_cfg)
+	if DRY_RUN:
+		print(" dry run")
+	else:
+		print(" uploading")
+		meshtastic_save_setup.set_config(outfile_cfg)
 
 	print(f"deleting {outfile_cfg}")
 	outfile_cfg.unlink()
