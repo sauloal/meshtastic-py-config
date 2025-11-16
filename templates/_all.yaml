@@ -19,7 +19,9 @@ config:
   lora:
     hopLimit: 3
     ignoreMqtt: true
-    modemPreset: LONG_SLOW
+    #modemPreset: LONG_SLOW
+    #modemPreset: LONG_FAST
+    #modemPreset: null
     region: EU_868
     sx126xRxBoostedGain: true
     txEnabled: true
@@ -50,6 +52,7 @@ config:
     #privateKey: base64:xxxxxxxxxxxxxxxx
     #publicKey: base64:yyyyyyyyyyyyyyyyyyyy
     serialEnabled: true
+
 module_config:
   #ambientLighting:
    # blue: 111
@@ -89,11 +92,12 @@ module_config:
     enabled: true
     heartbeat: true
   telemetry:
-    deviceUpdateInterval: 300
+    deviceUpdateInterval: 1800
     environmentMeasurementEnabled: true
-    environmentUpdateInterval: 300
+    environmentUpdateInterval: 1800
     powerMeasurementEnabled: true
-    powerUpdateInterval: 300
+    powerUpdateInterval: 1800
+    airQualityInterval: 1800
 
 #owner: xxxxx
 #owner_short: xxxx

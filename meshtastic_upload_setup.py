@@ -95,8 +95,12 @@ def calc_dict_diff(d1, d2, depth=0):
 				print(f"{' '*depth}{k}:")
 				calc_dict_diff(v1, v2, depth=depth+1)
 			else:
-				if v1 != v2:
+				if   v1 is None and v2 is None:
+					pass
+				elif v1 != v2:
 					print(f"{' '*depth}{k}: {v1} <=> {v2}")
+				else:
+					print(f"{' '*depth}{k}: {v1} === {v2}")
 
 def get_config(node_id: str, config_dir: str|Path = CONFIG_DIR, debug: bool=False, exclude_keys: dict|None=None):
 	config_dir   = Path(config_dir)
@@ -124,53 +128,53 @@ def main():
 	debug         = DEBUG
 
 	try:
-		dry_run       = sys.argv[1].lower() not in "1,y,yes,t,true".split(",")
+		dry_run = sys.argv[1].lower() not in "1,y,yes,t,true".split(",")
 	except IndexError:
 		pass
 
 	if dry_run:
 		print("DRY RUN")
 
-	template_dir  = Path(TEMPLATE_DIR)
-	secret_dir    = Path(SECRET_DIR)
+	template_dir    = Path(TEMPLATE_DIR)
+	secret_dir      = Path(SECRET_DIR)
 
-	node_id, info = meshtastic_download_setup.get_info()
+	node_id, info   = meshtastic_download_setup.get_info()
 
 	#print("INFO")
 	#yaml.safe_dump(info, sys.stdout)
 
-	config_dir    = Path(CONFIG_DIR)
+	config_dir      = Path(CONFIG_DIR)
 	assert config_dir.exists()
 	assert config_dir.is_dir()
-	outfile_cfg   = Path(f"{config_dir}/{node_id}.cfg.yaml")
+	outfile_cfg     = Path(f"{config_dir}/{node_id}.cfg.yaml")
 	meshtastic_download_setup.save_config(outfile_cfg)
 
 	print("="*50)
 	print("CONFIG")
 	print("="*50)
-	config = get_config(   node_id, config_dir,   debug=debug, exclude_keys=EXCLUDE_KEYS)
+	config          = get_config(   node_id, config_dir,   debug=debug, exclude_keys=EXCLUDE_KEYS)
 	yaml.safe_dump(config  , sys.stdout)
 
 	print("="*50)
 	print("TEMPLATE")
 	print("="*50)
-	template       = get_templates(node_id, template_dir, debug=debug)
+	template        = get_templates(node_id, template_dir, debug=debug)
 	yaml.safe_dump(template, sys.stdout)
 
 	print("="*50)
 	print("SECRET")
 	print("="*50)
-	secret         = get_secrets(  node_id, secret_dir,   debug=debug)
+	secret          = get_secrets(  node_id, secret_dir,   debug=debug)
 	yaml.safe_dump(secret  , sys.stdout)
 
-	data = None
+	data            = None
 	if debug:
-		data          = config
-		data          = merge_dict(data, template)
+		data    = config
+		data    = merge_dict(data, template)
 	else:
-		data          = template
+		data    = template
 
-	data          = merge_dict(data, secret)
+	data            = merge_dict(data, secret)
 
 	print("="*50)
 	print("DATA")
@@ -183,6 +187,8 @@ def main():
 	yaml.safe_dump(data  , fo)
 	config_y = fi.getvalue()
 	data_y   = fo.getvalue()
+	config_l = config_y.split("\n")
+	data_l   = data_y.split("\n")
 
 	if config_y == data_y:
 		print(f"CONFIG ALREADY UP-TO-DATE")
@@ -191,7 +197,26 @@ def main():
 	print("="*50)
 	print(f"CONFIG DIFFER")
 	print("="*50)
+	print("-"*50)
+	print("config_y")
+	print(config_y)
+	print("-"*50)
+	print("data_y")
+	print(data_y)
+	print("-"*50)
+	print("diff")
 	calc_dict_diff(config, data)
+	print("-"*50)
+	for row_num in range(max(len(config_l), len(data_l))):
+		try:
+			config_row = config_l[row_num]
+		except IndexError:
+			config_row = None
+		try:
+			data_row   = data_l[row_num]
+		except IndexError:
+			data_row   = None
+		print(f"{str(config_row == data_row):5s}  {str(config_row):45s} {str(data_row):45s}")
 	print("="*50)
 
 	outfile_cfg   = Path(f"{config_dir}/{node_id}.upd.yaml")
